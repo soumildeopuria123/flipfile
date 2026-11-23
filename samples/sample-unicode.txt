@@ -1,0 +1,31 @@
+Flipfile Unicode sample / Échantillon Unicode / 示例文档 / サンプル
+
+Latin with accents:
+  Français: Le cœur déçu mais l'âme plutôt naïve, à côté de la forêt.
+  Español: El pingüino comió jamón y piña en el año 2026.
+  Português: A ação de São Tomé foi eleita em 2019.
+  Tiếng Việt: Tiếng Việt có dấu rất phong phú.
+  Deutsch: Größe, Straße, Übermut, Äpfel, Öl.
+
+Greek (with accents):
+  Ελληνικά: Καλημέρα κόσμε. Η γλώσσα μας έχει τόνους: ά έ ή ί ό ύ ώ Ά Έ Ή Ί Ό Ύ Ώ.
+  Η φιλοσοφία ξεκινά με την απορία.
+
+Cyrillic:
+  Русский: Съешь же ещё этих мягких французских булок, да выпей чаю.
+  Українська: Ґудзик, їжак, Європа.
+  Български: Здравей, свят!
+
+Chinese (Simplified):
+  中文测试：这是一个用于验证字体嵌入的示例文档。
+  浏览器本地转换，文件不会上传到服务器。
+  标点符号：，。！？；：“”‘’《》——……
+
+Japanese:
+  日本語のテスト：これはフォント埋め込みを確認するための文書です。
+  ひらがな、カタカナ、漢字が混在しています。カタカナも表示できます。
+
+Mixed line: 中文字符 mixed with English 12345 and Ελληνικά and Русский.
+
+Currency and symbols: € 12,50 · £ 9.99 · ¥ 1,200 · ₹ 499 · © ® ™ § ¶ † ‡
+Dashes and quotes: — – ‐ “double” ‘single’ « guillemets » „German“
