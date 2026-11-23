@@ -1,0 +1,14 @@
+node_modules
+dist
+.DS_Store
+*.local
+.vite
+*.tsbuildinfo
+
+# Bundled font faces are downloaded by `npm run fonts` (see scripts/fetch-fonts.mjs).
+src/assets/*.ttf
+src/assets/*.part
+
+# Generated sample inputs (samples/make-samples.mjs produces these).
+samples/sample-image.png
+samples/sample-document.pdf
