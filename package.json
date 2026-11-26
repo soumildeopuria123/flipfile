@@ -10,6 +10,7 @@
     "dev": "vite",
     "prebuild": "npm run fonts --silent",
     "build": "tsc -b && vite build",
+    "prebuild:pages": "npm run fonts --silent",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "build:pages": "tsc -b && vite build --base=/flipfile/"
