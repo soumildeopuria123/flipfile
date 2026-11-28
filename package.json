@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "build:pages": "tsc -b && vite build --base=/flipfile/"
+
   },
   "dependencies": {
     "jszip": "^3.10.1",

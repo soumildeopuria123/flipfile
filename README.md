@@ -7,14 +7,19 @@ runs inside the browser tab: no uploads, no accounts, no server.
 
 ## What it does
 
-| Input | Output |
+| Input | Can be written as |
 | --- | --- |
-| PNG, JPG, WEBP, GIF, BMP, SVG, AVIF | single-page PDF (fit-to-file or A4) |
-| TXT, MD, CSV, JSON, HTML, source code | paginated A4 PDF with real, selectable text |
-| PDF | one PNG or JPG per page at 1×–3×, or a single `.txt` of the text layer |
+| PNG, JPG, WEBP, GIF, BMP, SVG, AVIF | PDF (fit-to-file or A4), PNG, JPG, WEBP |
+| TXT, MD, CSV, JSON, HTML, source code | PDF with real selectable text, plain `.txt` |
+| PDF | PNG, JPG, WEBP per page at 1×–3×, `.txt` of the text layer, `.docx` |
 
-Drop several files at once, watch per-file progress, save individually, or grab
-everything as one `.zip`.
+Tick as many output formats as you like: **every ticked format is written for every
+file that can reach it**, so one PDF can leave as PNG + JPG + TXT + DOCX in a single
+run. Formats that do not apply to a file are skipped rather than faked, and no-op
+round trips (PNG → PNG, PDF → PDF) are never queued.
+
+Drop several files at once, watch per-file progress, save a whole format as one
+click (multi-page images are zipped per format), or grab everything as one `.zip`.
 
 ## Getting started
 
@@ -38,9 +43,16 @@ the sample inputs in `samples/`.
   Cyrillic; Noto Sans SC is fetched and embedded only when the text actually
   contains CJK, so an English document never pays for the 17 MB CJK face. pdf-lib
   subsets both, so a converted document contains only the glyphs it uses.
-- **`src/lib/fromPdf.ts`** — pdf.js renders each page into a canvas (PNG/JPG) or reads
-  the text layer into one `.txt`.
-- **`src/App.tsx`** — queue, direction/format controls, download and zip.
+- **`src/lib/fromPdf.ts`** — pdf.js renders each page into a canvas once, then encodes
+  that single canvas into every requested image format; the text layer is read once
+  and reused for both `.txt` and `.docx`.
+- **`src/lib/convert.ts`** — the single entry point: resolves which ticked formats a
+  file can reach, then runs each of them (image → PDF, image → PNG/JPG/WEBP,
+  text → PDF/TXT, PDF → images/TXT/DOCX).
+- **`src/lib/docx.ts`** — writes a real OOXML package with JSZip, one paragraph per
+  line and a page break between the PDF pages it came from.
+- **`src/lib/raster.ts`** — shared canvas helpers (decode, white backdrop, encode).
+- **`src/App.tsx`** — queue, multi-format selection, per-format downloads and zip.
 
 Fonts are fetched with `scripts/fetch-fonts.mjs` because they are large binaries:
 Noto Sans (570 KB, latin-greek-cyrillic) and Noto Sans SC (17 MB, noto-cjk). Both
@@ -48,7 +60,10 @@ are licensed under the SIL Open Font License, see `src/assets/OFL-*.txt`.
 
 ## Notes and limits
 
-- Conversion is single-threaded and per file; a 3-page PDF at 3× takes a moment.
+- Conversion is single-threaded and per file; a 3-page PDF at 3× takes a moment —
+  asking for many formats costs one render plus one encode each, not one render each.
+- `.docx` output carries the text layer only: images, drawings and layout are not
+  reconstructed, and page breaks match PDF page ends.
 - Text extraction returns the PDF's text layer — scanned PDFs have none.
 - Bundled coverage: Latin, Greek, Cyrillic, Chinese, Japanese. Hangul, Arabic,
   Hebrew, Devanagari, Thai and emoji are not covered, and there is no RTL shaping.

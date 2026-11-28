@@ -1,12 +1,12 @@
 import { PDFDocument, rgb, type PDFPage } from 'pdf-lib'
 import { embedTextFonts, fontFor, fontRuns, type TextFonts } from './textFont'
 import {
-  baseNameOf,
-  extensionOf,
-  isImage,
-  type OutputFile,
-  type ToPdfOptions,
-} from './types'
+  PHOTO_EXTENSIONS,
+  canvasBytes,
+  fitWithin,
+  rasterize,
+} from './raster'
+import { baseNameOf, extensionOf, isImage, type OutputFile } from './types'
 
 const A4 = { width: 595.28, height: 841.89 }
 const POINTS_PER_PX = 72 / 96
@@ -14,7 +14,10 @@ const MARGIN = 56
 const FONT_SIZE = 11
 const LEADING = 16.5
 const INK = rgb(0.09, 0.09, 0.11)
-const PHOTO_EXTENSIONS = ['jpg', 'jpeg']
+
+export interface ToPdfOptions {
+  pageSize: 'fit' | 'a4'
+}
 
 /** Build a PDF from a single non-PDF file. */
 export async function convertToPdf(
@@ -62,68 +65,10 @@ async function pdfFromImage(file: File, options: ToPdfOptions): Promise<PDFDocum
   return pdf
 }
 
-async function rasterize(file: File): Promise<HTMLCanvasElement> {
-  const url = URL.createObjectURL(file)
-  const img = new Image()
-  try {
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => resolve()
-      img.onerror = () => reject(new Error('This image could not be decoded by the browser.'))
-      img.src = url
-    })
-
-    const width = img.naturalWidth || 1200
-    const height = img.naturalHeight || 900
-    const scale = Math.min(1, 2600 / Math.max(width, height))
-
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round(width * scale))
-    canvas.height = Math.max(1, Math.round(height * scale))
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Canvas is not available in this browser.')
-    // White backdrop so transparent PNGs / SVGs do not turn black in the PDF.
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-    return canvas
-  } finally {
-    URL.revokeObjectURL(url)
-  }
-}
-
-function canvasBytes(
-  canvas: HTMLCanvasElement,
-  mime: 'image/jpeg' | 'image/png',
-): Promise<Uint8Array> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('This image could not be encoded.'))
-          return
-        }
-        blob.arrayBuffer().then((buffer) => resolve(new Uint8Array(buffer)), reject)
-      },
-      mime,
-      0.92,
-    )
-  })
-}
-
-function fitWithin(
-  width: number,
-  height: number,
-  maxWidth: number,
-  maxHeight: number,
-): { width: number; height: number } {
-  const ratio = Math.min(maxWidth / width, maxHeight / height)
-  return { width: width * ratio, height: height * ratio }
-}
-
 /* -------------------------------------------------------------------- text */
 
-async function pdfFromText(file: File): Promise<PDFDocument> {
+/** The plain text Flipfile would typeset, which is also what the TXT target writes. */
+export async function plainTextOf(file: File): Promise<string> {
   const raw = await file.text()
   if (looksBinary(raw)) {
     throw new Error(
@@ -132,12 +77,13 @@ async function pdfFromText(file: File): Promise<PDFDocument> {
   }
 
   const ext = extensionOf(file.name)
-  const text =
-    ext === 'html' || ext === 'htm'
-      ? htmlToText(raw)
-      : ext === 'md' || ext === 'markdown'
-        ? markdownToText(raw)
-        : raw
+  if (ext === 'html' || ext === 'htm') return htmlToText(raw)
+  if (ext === 'md' || ext === 'markdown') return markdownToText(raw)
+  return raw
+}
+
+async function pdfFromText(file: File): Promise<PDFDocument> {
+  const text = await plainTextOf(file)
 
   const pdf = await PDFDocument.create()
   pdf.setTitle(baseNameOf(file.name))
